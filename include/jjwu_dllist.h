@@ -23,8 +23,34 @@
 
 
 
-
 /* The following definition should not change manually. */
+
+#define dllist_node(node) \
+	node->self
+
+#define dllist_prev_node(node) \
+	node->prev->self
+
+#define dllist_next_node(node) \
+	node->next->self
+
+#define dllist_for_each(startnode, endnode) \
+	for (; startnode->next != endnode ; startnode = startnode->next)
+
+#define dllist_for_each_prior(startnode, endnode) \
+	for (; startnode->prev != endnode ; startnode = startnode->prev)
+
+#define dllist_for_each_next(startnode, endnode) \
+	dllist_for_each(startnode, endnode)
+
+#define dllist_for_each_node(startnode, endnode, entry) \
+	for (; startnode->next != endnode ; entry = startnode->self, startnode = startnode->next)
+
+#define dllist_for_each_node_prior(startnode, endnode, entry) \
+	for (; startnode->prev != endnode ; entry = startnode->self, startnode = startnode->prev)
+
+#define dllist_for_each_entry_next(startnode, endnode, entry) \
+	dllist_for_each_entry(startnode, endnode, entry)
 
 typedef struct dllist
 {
@@ -65,8 +91,8 @@ inline void dllist_addnode_next(PDLLIST pdllist, PDLLIST node)
 
 static inline void __dllist_deletenode(PDLLIST node)
 {
-	node->prev->next = next;
-	node->next->prev = prev;
+	node->prev->next = node->next;
+	node->next->prev = node->prev;
 	dllist_init(node);
 }
 
@@ -84,7 +110,7 @@ inline void dllist_movenode(PDLLIST pdllist, PDLLIST node)
 inline void dllist_movenode_prior(PDLLIST pdllist, PDLLIST node)
 {
 	dllist_deletenode(node);
-	list_add_prior(pdllist, node);
+	dllist_addnode_prior(pdllist, node);
 }
 
 inline void dllist_movenode_next(PDLLIST pdllist, PDLLIST node)
@@ -139,4 +165,18 @@ inline void dllist_concat_next(PDLLIST dest, PDLLIST src)
 	dllist_concat(dest, src);
 }
 
+inline int dllist_exist(PDLLIST pdllist, PDLLIST node)
+{
+	PDLLIST startnode = pdllist;
+	PDLLIST endnode = pdllist;
+	int ret = 0;
+
+	dllist_for_each(startnode, endnode)
+	{
+		if (startnode == node)
+			ret = 1;
+	}
+	
+	return ret;
+}
 #endif
