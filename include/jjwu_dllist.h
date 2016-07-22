@@ -25,63 +25,66 @@
 
 /* The following definition should not change manually. */
 
+#define DLLIST_INIT(dllist) \
+	DLLIST dllist = { .prior = &dllist, .next = &dllist }
+
 #define dllist_node(node) \
 	node->self
 
-#define dllist_prev_node(node) \
-	node->prev->self
+#define dllist_prior_node(node) \
+	node->prior->self
 
 #define dllist_next_node(node) \
 	node->next->self
 
-#define dllist_for_each(startnode, endnode) \
-	for (; startnode->next != endnode ; startnode = startnode->next)
+#define dllist_for_each_node(pdllist, node) \
+	for (node = (pdllist)->next ; node != pdllist ; node = node->next)
 
-#define dllist_for_each_prior(startnode, endnode) \
-	for (; startnode->prev != endnode ; startnode = startnode->prev)
+#define dllist_for_each_node_prior(pdllist, node) \
+	for (node = (pdllist)->prior ; node != pdllist ; node = node->prior)
 
-#define dllist_for_each_next(startnode, endnode) \
-	dllist_for_each(startnode, endnode)
+#define dllist_for_each_node_next(pdllist, node) \
+	dllist_for_each_node(pdllist, node)
 
-#define dllist_for_each_node(startnode, endnode, entry) \
-	for (; startnode->next != endnode ; entry = startnode->self, startnode = startnode->next)
+#define dllist_for_each_entry(pdllist, node, entry) \
+	for (node = (pdllist)->next ; node != pdllist, entry = node->self ; node = node->next)
 
-#define dllist_for_each_node_prior(startnode, endnode, entry) \
-	for (; startnode->prev != endnode ; entry = startnode->self, startnode = startnode->prev)
+#define dllist_for_each_entry_prior(pdllist, node, entry) \
+	for (node = (pdllist)->prior ; node != pdllist, entry = node->self ; node = node->prior)
 
-#define dllist_for_each_entry_next(startnode, endnode, entry) \
-	dllist_for_each_entry(startnode, endnode, entry)
+#define dllist_for_each_entry_next(pdllist, node, entry) \
+	dllist_for_each_entry(pdllist, node, entry)
 
 typedef struct dllist
 {
 	void *self;
-	struct dllist *prev;
+	struct dllist *prior;
 	struct dllist *next;
 } DLLIST, *PDLLIST;
 
-inline void dllist_init(PDLLIST pdllist)
+static inline void dllist_init(PDLLIST pdllist)
 {
-	pdllist->prev = pdllist;
+	pdllist->prior = pdllist;
 	pdllist->next = pdllist;
 }
 
-static inline void __dllist_addnode(PDLLIST prev, PDLLIST next, PDLLIST node)
+static inline void jjwu_dllist_addnode(PDLLIST prior, PDLLIST next, PDLLIST node)
 {
-	prev->next = node;
-	node->prev = prev;
+	prior->next = node;
+	node->prior = prior;
 	node->next = next;
-	next->prev = node;
+	next->prior = node;
 }
 
 inline void dllist_addnode(PDLLIST pdllist, PDLLIST node)
 {
-	__dllist_addnode(pdllist, pdllist->next, node);	
+	jjwu_dllist_addnode(pdllist, pdllist->next, node);	
 }
 
-inline void dllist_addnode_prior(PDLLIST pdllist, PDLLIST node)
+inline void dllist_addnode_tail(PDLLIST pdllist, PDLLIST node)
 {
 	
-	__dllist_addnode(pdllist->prev, pdllist, node);	
+	jjwu_dllist_addnode(pdllist->prior, pdllist, node);	
 }
 
 inline void dllist_addnode_next(PDLLIST pdllist, PDLLIST node)
@@ -89,16 +92,16 @@ inline void dllist_addnode_next(PDLLIST pdllist, PDLLIST node)
 	dllist_addnode(pdllist, node);
 }
 
-static inline void __dllist_deletenode(PDLLIST node)
+static inline void jjwu_dllist_deletenode(PDLLIST node)
 {
-	node->prev->next = node->next;
-	node->next->prev = node->prev;
+	node->prior->next = node->next;
+	node->next->prior = node->prior;
 	dllist_init(node);
 }
 
 inline void dllist_deletenode(PDLLIST node)
 {
-	__dllist_deletenode(node);	
+	jjwu_dllist_deletenode(node);	
 }
 
 inline void dllist_movenode(PDLLIST pdllist, PDLLIST node)
@@ -107,10 +110,10 @@ inline void dllist_movenode(PDLLIST pdllist, PDLLIST node)
 	dllist_addnode(pdllist, node);
 }
 
-inline void dllist_movenode_prior(PDLLIST pdllist, PDLLIST node)
+inline void dllist_movenode_tail(PDLLIST pdllist, PDLLIST node)
 {
 	dllist_deletenode(node);
-	dllist_addnode_prior(pdllist, node);
+	dllist_addnode_tail(pdllist, node);
 }
 
 inline void dllist_movenode_next(PDLLIST pdllist, PDLLIST node)
@@ -120,16 +123,16 @@ inline void dllist_movenode_next(PDLLIST pdllist, PDLLIST node)
 
 inline int dllist_empty(PDLLIST pdllist)
 {
-	return ((pdllist->prev == pdllist) && (pdllist->next == pdllist));	
+	return ((pdllist->prior == pdllist) && (pdllist->next == pdllist));	
 }
 
-static inline void __dllist_concat(PDLLIST dest, PDLLIST src, PDLLIST src_prev)
+static inline void jjwu_dllist_concat(PDLLIST dest, PDLLIST src, PDLLIST src_prior)
 {
 	PDLLIST dest_next = dest->next;
     dest->next = src;
-	src->prev = dest;
-    src_prev->next = dest;
-    dest_next->prev = src_prev;
+	src->prior = dest;
+    src_prior->next = dest;
+    dest_next->prior = src_prior;
 }
 
 inline void dllist_concat(PDLLIST dest, PDLLIST src)
@@ -137,26 +140,26 @@ inline void dllist_concat(PDLLIST dest, PDLLIST src)
 	if (!dllist_empty(dest))
 	{
 		PDLLIST dest_next = dest->next;
-		PDLLIST src_prev = src->prev;
+		PDLLIST src_prior = src->prior;
 
 		dest->next = src;
-		src->prev = dest;
-		src_prev = dest_next;
-		dest_next->prev = src_prev;
+		src->prior = dest;
+		src_prior = dest_next;
+		dest_next->prior = src_prior;
 	}
 }
 
-inline void dllist_concat_prior(PDLLIST dest, PDLLIST src)
+inline void dllist_concat_tail(PDLLIST dest, PDLLIST src)
 {
 	if (!dllist_empty(dest))
 	{
-		PDLLIST dest_prev = dest->prev;
-		PDLLIST src_prev = src->prev;
+		PDLLIST dest_prior = dest->prior;
+		PDLLIST src_prior = src->prior;
 
-		dest->prev = src_prev;
-		src_prev->next = dest;
-		src->prev = dest_prev;
-		dest_prev->next = src;
+		dest->prior = src_prior;
+		src_prior->next = dest;
+		src->prior = dest_prior;
+		dest_prior->next = src;
 	}
 }
 
@@ -167,16 +170,16 @@ inline void dllist_concat_next(PDLLIST dest, PDLLIST src)
 
 inline int dllist_exist(PDLLIST pdllist, PDLLIST node)
 {
-	PDLLIST startnode = pdllist;
 	PDLLIST endnode = pdllist;
 	int ret = 0;
 
-	dllist_for_each(startnode, endnode)
+	dllist_for_each_node(pdllist, node)
 	{
-		if (startnode == node)
+		if (pdllist == node)
 			ret = 1;
 	}
 	
 	return ret;
 }
+
 #endif
