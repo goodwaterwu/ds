@@ -19,40 +19,36 @@
 #ifndef __JJWU_DLLIST_H__
 #define __JJWU_DLLIST_H__
 
-/* The follow definition can change according to your need */
-
-
-
 /* The following definition should not change manually. */
 
-#define DLLIST_INIT(dllist) \
+#define DLLIST_INIT(dllist)\
 	DLLIST dllist = { .prior = &dllist, .next = &dllist }
 
-#define dllist_node(node) \
-	node->self
+#define dllist_entry(node)\
+	((node)->self)
 
-#define dllist_prior_node(node) \
-	node->prior->self
+#define dllist_prior_entry(node)\
+	((node)->prior->self)
 
-#define dllist_next_node(node) \
-	node->next->self
+#define dllist_next_entry(node)\
+	((node)->next->self)
 
-#define dllist_for_each_node(pdllist, node) \
+#define dllist_for_each_node(pdllist, node)\
 	for (node = (pdllist)->next ; node != pdllist ; node = node->next)
 
-#define dllist_for_each_node_prior(pdllist, node) \
+#define dllist_for_each_node_prior(pdllist, node)\
 	for (node = (pdllist)->prior ; node != pdllist ; node = node->prior)
 
-#define dllist_for_each_node_next(pdllist, node) \
+#define dllist_for_each_node_next(pdllist, node)\
 	dllist_for_each_node(pdllist, node)
 
-#define dllist_for_each_entry(pdllist, node, entry) \
-	for (node = (pdllist)->next ; node != pdllist, entry = node->self ; node = node->next)
+#define dllist_for_each_entry(pdllist, node, entry)\
+	for (node = (pdllist)->next ; (node != pdllist) && (entry = node->self) ; node = node->next)
 
-#define dllist_for_each_entry_prior(pdllist, node, entry) \
-	for (node = (pdllist)->prior ; node != pdllist, entry = node->self ; node = node->prior)
+#define dllist_for_each_entry_prior(pdllist, node, entry)\
+	for (node = (pdllist)->prior ; (node != pdllist) && (entry = node->self) ; node = node->prior)
 
-#define dllist_for_each_entry_next(pdllist, node, entry) \
+#define dllist_for_each_entry_next(pdllist, node, entry)\
 	dllist_for_each_entry(pdllist, node, entry)
 
 typedef struct dllist
@@ -126,41 +122,26 @@ inline int dllist_empty(PDLLIST pdllist)
 	return ((pdllist->prior == pdllist) && (pdllist->next == pdllist));	
 }
 
-static inline void jjwu_dllist_concat(PDLLIST dest, PDLLIST src, PDLLIST src_prior)
-{
-	PDLLIST dest_next = dest->next;
-    dest->next = src;
-	src->prior = dest;
-    src_prior->next = dest;
-    dest_next->prior = src_prior;
-}
-
 inline void dllist_concat(PDLLIST dest, PDLLIST src)
 {
-	if (!dllist_empty(dest))
-	{
-		PDLLIST dest_next = dest->next;
-		PDLLIST src_prior = src->prior;
+	PDLLIST dn = dest->next;
 
-		dest->next = src;
-		src->prior = dest;
-		src_prior = dest_next;
-		dest_next->prior = src_prior;
-	}
+	dest->next = src->next;
+	src->next->prior = dest;
+	src->prior->next = dn;
+	dn->prior = src->prior;
+	dllist_init(src);
 }
 
 inline void dllist_concat_tail(PDLLIST dest, PDLLIST src)
 {
-	if (!dllist_empty(dest))
-	{
-		PDLLIST dest_prior = dest->prior;
-		PDLLIST src_prior = src->prior;
+	PDLLIST dp = dest->prior;
 
-		dest->prior = src_prior;
-		src_prior->next = dest;
-		src->prior = dest_prior;
-		dest_prior->next = src;
-	}
+	dest->prior = src->prior;
+	src->prior->next = dest;
+	src->next->prior = dp;
+	dp->next = src->next;
+	dllist_init(src);
 }
 
 inline void dllist_concat_next(PDLLIST dest, PDLLIST src)
@@ -170,13 +151,19 @@ inline void dllist_concat_next(PDLLIST dest, PDLLIST src)
 
 inline int dllist_exist(PDLLIST pdllist, PDLLIST node)
 {
-	PDLLIST endnode = pdllist;
+	PDLLIST iternode = NULL;
 	int ret = 0;
 
-	dllist_for_each_node(pdllist, node)
+	if (!dllist_empty(pdllist))
 	{
-		if (pdllist == node)
-			ret = 1;
+		dllist_for_each_node(pdllist, iternode)
+		{
+			if (iternode == node)
+			{
+				ret = 1;
+				break;
+			}
+		}
 	}
 	
 	return ret;
