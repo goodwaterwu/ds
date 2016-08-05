@@ -42,35 +42,27 @@ int main(int argc, const char *argv[])
 
 	s[num].name = "John";
 	s[num].number = num;
-	s[num].dllist.self = (struct test*)&s[num];
 	num++;
 	s[num].name = "Victor";
 	s[num].number = num;
-	s[num].dllist.self = (struct test*)&s[num];
 	num++;
 	s[num].name = "Joseph";
 	s[num].number = num;
-	s[num].dllist.self = (struct test*)&s[num];
 	num++;
 	s[num].name = "Stephen";
 	s[num].number = num;
-	s[num].dllist.self = (struct test*)&s[num];
 	num++;
 	s[num].name = "Allen";
 	s[num].number = num;
-	s[num].dllist.self = (struct test*)&s[num];
 	num++;
 	s[num].name = "Joanna";
 	s[num].number = num;
-	s[num].dllist.self = (struct test*)&s[num];
 	num++;
 	s[num].name = "Allison";
 	s[num].number = num;
-	s[num].dllist.self = (struct test*)&s[num];
 	num++;
 	s[num].name = "Selina";
 	s[num].number = num;
-	s[num].dllist.self = (struct test*)&s[num];
 
 	SEPARATOR();
 
@@ -78,13 +70,13 @@ int main(int argc, const char *argv[])
 	{
 		if (num % 2 == 0)
 		{
-			dllist_addnode(&dllist, &s[num].dllist);
-			printf("dllist_addnode(&dllist, &s[%d].dllist)\n", num);
+			dllist_addnode(&dllist, &s[num].dllist, &s[num]);
+			printf("dllist_addnode(&dllist, &s[%d].dllist, &s[%d])\n", num, num);
 		}
 		else
 		{
-			dllist_addnode_tail(&dllist, &s[num].dllist);
-			printf("dllist_addnode_tail(&dllist, &s[%d].dllist)\n", num);
+			dllist_addnode_tail(&dllist, &s[num].dllist, &s[num]);
+			printf("dllist_addnode_tail(&dllist, &s[%d].dllist, &s[%d])\n", num, num);
 		}
 	}
 
@@ -277,13 +269,13 @@ int main(int argc, const char *argv[])
 
 	SEPARATOR();
 	
-	dllist_addnode(&sec_dllist, &s[0].dllist);
+	dllist_addnode(&sec_dllist, &s[0].dllist, &s[0]);
 	dllist_movenode(&sec_dllist, &s[1].dllist);
 	dllist_movenode(&sec_dllist, &s[2].dllist);
 	dllist_movenode(&sec_dllist, &s[3].dllist);
 	dllist_movenode(&sec_dllist, &s[4].dllist);
 
-	printf("dllist_addnode(&sec_dllist, &s[0].dllist)\n");
+	printf("dllist_addnode(&sec_dllist, &s[0].dllist, &s[0])\n");
 	printf("dllist_movenode(&sec_dllist, &s[1].dllist)\n");
 	printf("dllist_movenode(&sec_dllist, &s[2].dllist)\n");
 	printf("dllist_movenode(&sec_dllist, &s[3].dllist)\n");

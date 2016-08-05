@@ -72,20 +72,22 @@ static inline void jjwu_dllist_addnode(PDLLIST prior, PDLLIST next, PDLLIST node
 	next->prior = node;
 }
 
-inline void dllist_addnode(PDLLIST pdllist, PDLLIST node)
+inline void dllist_addnode(PDLLIST pdllist, PDLLIST node, void *self)
 {
+	node->self = self;
 	jjwu_dllist_addnode(pdllist, pdllist->next, node);	
 }
 
-inline void dllist_addnode_tail(PDLLIST pdllist, PDLLIST node)
+inline void dllist_addnode_tail(PDLLIST pdllist, PDLLIST node, void *self)
 {
-	
+	node->self = self;
 	jjwu_dllist_addnode(pdllist->prior, pdllist, node);	
 }
 
-inline void dllist_addnode_next(PDLLIST pdllist, PDLLIST node)
+inline void dllist_addnode_next(PDLLIST pdllist, PDLLIST node, void *self)
 {
-	dllist_addnode(pdllist, node);
+	node->self = self;
+	dllist_addnode(pdllist, node, self);
 }
 
 static inline void jjwu_dllist_deletenode(PDLLIST node)
@@ -103,13 +105,13 @@ inline void dllist_deletenode(PDLLIST node)
 inline void dllist_movenode(PDLLIST pdllist, PDLLIST node)
 {
 	dllist_deletenode(node);
-	dllist_addnode(pdllist, node);
+	dllist_addnode(pdllist, node, node->self);
 }
 
 inline void dllist_movenode_tail(PDLLIST pdllist, PDLLIST node)
 {
 	dllist_deletenode(node);
-	dllist_addnode_tail(pdllist, node);
+	dllist_addnode_tail(pdllist, node, node->self);
 }
 
 inline void dllist_movenode_next(PDLLIST pdllist, PDLLIST node)
