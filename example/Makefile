@@ -23,17 +23,30 @@ DLLIST_SRC = \
 DLLIST_OBJS = \
 	test_dllist.o
 
+NON_RLQ_SRC = \
+	test_non_rlq.c
+
+NON_RLQ_OBJS = \
+	test_non_rlq.o
+
 EXEC_FILES = \
-	test_dllist
+	test_dllist \
+	test_non_rlq
 
 .PHONY: all
 
-all: test_dllist
+all: test_dllist test_non_rlq
 
 .PHONY: test_dllist
 
 test_dllist: $(DLLIST_OBJS)
 	$(CC) $(DLLIST_OBJS) $(CFLAGS) -o $@
+	$(STRIP) $@
+
+.PHONY: test_non_rlq
+
+test_non_rlq: $(NON_RLQ_OBJS)
+	$(CC) $(NON_RLQ_OBJS) $(CFLAGS) -o $@
 	$(STRIP) $@
 
 %.o: %.c
@@ -51,4 +64,4 @@ install: all
 .PHONY: clean
 
 clean:
-	@rm -rf $(DLLIST_OBJS) $(EXEC_FILES) $(DESTDIR)
+	@rm -rf $(DLLIST_OBJS) $(NON_RLQ_OBJS) $(EXEC_FILES) $(DESTDIR)
